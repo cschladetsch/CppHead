@@ -1,36 +1,33 @@
 cmake_minimum_required(VERSION 3.20)
-project(CppHead CXX)
+project(CppHead LANGUAGES CXX)
 
+# Require C++23
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Main Head Executable
 add_executable(head main.cpp)
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/gtest")
-    target_include_directories(head PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/external/gtest/googletest/include"
-        "${CMAKE_CURRENT_SOURCE_DIR}/external/gtest/googlemock/include"
-    )
-endif()
+# Enable Testing
+enable_testing()
 
-include(CTest)
-if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/gtest/CMakeLists.txt")
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    add_subdirectory(external/gtest EXCLUDE_FROM_ALL)
+# Fetch GoogleTest automatically via FetchContent (replaces submodule requirement)
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+)
+# For Windows MSVC: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
-    add_executable(cpphead_tests 
-        tests/cpphead_tests.cpp
-    )
+# Unit Tests Executable
+add_executable(cpphead_tests cpphead_tests.cpp)
+target_link_libraries(cpphead_tests PRIVATE GTest::gtest_main)
 
-    target_link_libraries(cpphead_tests PRIVATE gtest_main)
-    target_include_directories(cpphead_tests PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/external/gtest/googletest/include"
-    )
+include(GoogleTest)
+gtest_discover_tests(cpphead_tests)
 
-    include(GoogleTest)
-    gtest_discover_tests(cpphead_tests)
-
-    # Benchmark Target
-    add_executable(cpphead_benchmark tests/benchmark.cpp)
-endif()
+# Micro-Benchmark Executable
+add_executable(cpphead_benchmark benchmark.cpp)
