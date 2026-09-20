@@ -5,11 +5,11 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Main executable target referencing main.cpp in root
-add_executable(cpphead main.cpp)
+# Define the target directly as "head"
+add_executable(head main.cpp)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/gtest")
-    target_include_directories(cpphead PRIVATE
+    target_include_directories(head PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/external/gtest/googletest/include"
         "${CMAKE_CURRENT_SOURCE_DIR}/external/gtest/googlemock/include"
     )

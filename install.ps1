@@ -1,21 +1,28 @@
 # install.ps1
 $ErrorActionPreference = "Stop"
 
+Write-Host "==> Triggering build process..." -ForegroundColor Cyan
+if (Test-Path ".\build.ps1") {
+    & .\build.ps1
+} else {
+    Write-Error "build.ps1 not found in the current directory."
+    exit 1
+}
+
 $installDir = "$HOME\bin"
 if (!(Test-Path $installDir)) {
     New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 }
 
-# Determine binary path based on multi-config (MSVC) or single-config (Ninja/Makefiles) generators
-$binaryName = "cpphead.exe"
-$sourcePath = "build\Release\$binaryName"
+$binaryName = "head.exe"
+$sourcePath = "build\$binaryName"
 
 if (!(Test-Path $sourcePath)) {
-    $sourcePath = "build\$binaryName"
+    $sourcePath = "build\Release\$binaryName"
 }
 
 if (!(Test-Path $sourcePath)) {
-    Write-Error "Binary not found at build outputs. Please run .\build.ps1 first."
+    Write-Error "Binary not found at build outputs: $sourcePath"
     exit 1
 }
 
@@ -24,7 +31,6 @@ Copy-Item -Force $sourcePath $installDir
 
 Write-Host "==> Installed successfully to $installDir\$binaryName" -ForegroundColor Green
 
-# Check if install directory is in user PATH
 $userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
 if ($userPath -notlike "*$installDir*") {
     Write-Host "==> Note: '$installDir' is not currently in your User PATH." -ForegroundColor Yellow
