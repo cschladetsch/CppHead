@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Define the target directly as "head"
 add_executable(head main.cpp)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/gtest")
@@ -31,4 +30,7 @@ if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/gtest/CMakeLis
 
     include(GoogleTest)
     gtest_discover_tests(cpphead_tests)
+
+    # Benchmark Target
+    add_executable(cpphead_benchmark tests/benchmark.cpp)
 endif()

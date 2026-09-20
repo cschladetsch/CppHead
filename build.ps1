@@ -16,10 +16,21 @@ cmake -B build -S . `
     -DCMAKE_BUILD_TYPE=Release `
     -DBUILD_TESTING=ON
 
-Write-Host "==> Building CppHead and test suite..." -ForegroundColor Cyan
+Write-Host "==> Building CppHead, tests, and benchmarks..." -ForegroundColor Cyan
 cmake --build build --config Release
 
-Write-Host "==> Running tests..." -ForegroundColor Cyan
+Write-Host "==> Running unit tests..." -ForegroundColor Cyan
 ctest --test-dir build --output-on-failure -C Release
 
-Write-Host "==> Build and test completed successfully!" -ForegroundColor Green
+Write-Host "==> Running performance benchmark..." -ForegroundColor Cyan
+$benchmarkExe = "build\cpphead_benchmark.exe"
+if (!(Test-Path $benchmarkExe)) {$benchmarkExe = "build\Release\cpphead_benchmark.exe"
+}
+
+if (Test-Path $benchmarkExe) {
+    & $benchmarkExe
+} else {
+    Write-Warning "Benchmark executable not found."
+}
+
+Write-Host "==> Build, test, and benchmark completed successfully!" -ForegroundColor Green
