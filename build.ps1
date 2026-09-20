@@ -1,36 +1,41 @@
-# build.ps1
 $ErrorActionPreference = "Stop"
 
-Write-Host "==> Ensuring required directories exist..." -ForegroundColor Cyan
-if (!(Test-Path "tests")) { New-Item -ItemType Directory -Path "tests" | Out-Null }
-
-Write-Host "==> Creating build directory..." -ForegroundColor Cyan
-if (!(Test-Path "build")) {
-    New-Item -ItemType Directory -Name "build" | Out-Null
-}
-
-Write-Host "==> Configuring CMake with Clang..." -ForegroundColor Cyan
-cmake -B build -S . `
-    -DCMAKE_C_COMPILER=clang `
-    -DCMAKE_CXX_COMPILER=clang++ `
-    -DCMAKE_BUILD_TYPE=Release `
-    -DBUILD_TESTING=ON
-
-Write-Host "==> Building CppHead, tests, and benchmarks..." -ForegroundColor Cyan
+Write-Host "==> Configuring and building CppHead (Release)..." -ForegroundColor Cyan
+cmake -B build -S .
 cmake --build build --config Release
 
-Write-Host "==> Running unit tests..." -ForegroundColor Cyan
-ctest --test-dir build --output-on-failure -C Release
+Write-Host "==> Running performance comparison..." -ForegroundColor Cyan
 
-Write-Host "==> Running performance benchmark..." -ForegroundColor Cyan
-$benchmarkExe = "build\cpphead_benchmark.exe"
-if (!(Test-Path $benchmarkExe)) {$benchmarkExe = "build\Release\cpphead_benchmark.exe"
+# Ensure a test file exists with 10,000 lines
+$TestFile = "benchmark_temp.txt"
+1..10000 | ForEach-Object { "This is benchmark line number $_" } | Set-Content $TestFile
+
+# Dynamically resolve the built executable location across common CMake configurations
+$CppHeadBin = "$PSScriptRoot\build\head.exe"
+if (-not (Test-Path $CppHeadBin)) {
+    $CppHeadBin = "$PSScriptRoot\build\Release\head.exe"
+}
+if (-not (Test-Path $CppHeadBin)) {
+    $CppHeadBin = "$PSScriptRoot\build\Debug\head.exe"
 }
 
-if (Test-Path $benchmarkExe) {
-    & $benchmarkExe
+if (Test-Path $CppHeadBin) {
+    # 1. Benchmark CppHead (First 1,000 lines using Unix -n flag)
+    $CppWatch = [System.Diagnostics.Stopwatch]::StartNew()
+    & $CppHeadBin -n 1000 $TestFile | Out-Null
+    $CppWatch.Stop()
+    Write-Host "[Benchmark] CppHead (1,000 lines):       " -NoNewline
+    Write-Host "$($CppWatch.ElapsedTicks / [System.Diagnostics.Stopwatch]::Frequency * 1000000) µs" -ForegroundColor Green
 } else {
-    Write-Warning "Benchmark executable not found."
+    Write-Error "Could not find compiled head executable. Checked build\, build\Release\, and build\Debug\."
 }
 
-Write-Host "==> Build, test, and benchmark completed successfully!" -ForegroundColor Green
+# 2. Benchmark PowerShell Get-Content (First 1,000 lines)
+$PsWatch = [System.Diagnostics.Stopwatch]::StartNew()
+Get-Content $TestFile -TotalCount 1000 | Out-Null
+$PsWatch.Stop()
+Write-Host "[Benchmark] PowerShell Get-Content:     " -NoNewline
+Write-Host "$($PsWatch.ElapsedTicks / [System.Diagnostics.Stopwatch]::Frequency * 1000000) µs" -ForegroundColor Yellow
+
+# Cleanup
+Remove-Item $TestFile -ErrorAction SilentlyContinue

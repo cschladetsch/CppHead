@@ -1,48 +1,64 @@
-#include <chrono>
 #include <iostream>
+#include <chrono>
 #include <fstream>
+#include <vector>
 #include <string>
-#include <filesystem>
 
-namespace fs = std::filesystem;
+// Simple benchmark routine
+void run_benchmark() {
+    std::cout << "========================================\n";
+    std::cout << "    CppHead Performance Benchmark       \n";
+    std::cout << "========================================\n";
 
-void run_benchmark(const fs::path& test_file, size_t line_limit) {
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    std::ifstream file(test_file);
-    if (!file.is_open()) {
-        std::cerr << "Failed to open benchmark file: " << test_file << "\n";
-        return;
-    }
-
-    std::string line;
-    size_t count = 0;
-    while (count < line_limit && std::getline(file, line)) {
-        ++count;
-    }
-
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-
-    std::cout << "[Benchmark] Read " << count << " lines in " << duration << " microseconds.\n";
-}
-
-int main(int argc, char* argv[]) {
-    fs::path temp_file = "benchmark_temp.txt";
-    
-    // Generate a temporary file with 50,000 lines for benchmarking
+    // Create a temporary test file with known data
+    const std::string test_filename = "benchmark_temp.txt";
     {
-        std::ofstream out(temp_file);
-        for (int i = 0; i < 50000; ++i) {
-            out << "This is benchmark line number " << i << "\n";
+        std::ofstream outfile(test_filename);
+        for (int i = 1; i <= 10000; ++i) {
+            outfile << "This is benchmark line number " << i << "\n";
         }
     }
 
-    std::cout << "Running C++ Head Benchmark...\n";
-    run_benchmark(temp_file, 10);
-    run_benchmark(temp_file, 1000);
+    // Benchmark 1: Streaming first 10 lines
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        
+        std::ifstream file(test_filename);
+        std::string line;
+        int count = 0;
+        while (std::getline(file, line) && count < 10) {
+            ++count;
+        }
 
-    // Cleanup
-    fs::remove(temp_file);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        
+        std::cout << "[Benchmark] Stream first 10 lines:   " << duration << " µs\n";
+    }
+
+    // Benchmark 2: Streaming first 1,000 lines
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        
+        std::ifstream file(test_filename);
+        std::string line;
+        int count = 0;
+        while (std::getline(file, line) && count < 1000) {
+            ++count;
+        }
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        
+        std::cout << "[Benchmark] Stream first 1,000 lines: " << duration << " µs\n";
+    }
+
+    // Cleanup temporary file
+    std::remove(test_filename.c_str());
+    std::cout << "========================================\n";
+}
+
+int main() {
+    run_benchmark();
     return 0;
 }
