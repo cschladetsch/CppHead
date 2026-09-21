@@ -5,7 +5,7 @@ CppHead is a fast, local-first, C++23 reimplementation of the Unix `head` comman
 ## Synopsis
 
 ```
-cpphead [OPTION]... [FILE]...
+head [OPTION]... [FILE]...
 ```
 
 If no `FILE` is given, or `FILE` is `-`, CppHead reads from standard input.
@@ -26,28 +26,28 @@ If no `FILE` is given, or `FILE` is `-`, CppHead reads from standard input.
 Print the first 10 lines of a file (default):
 
 ```
-cpphead notes.txt
+head notes.txt
 ```
 
 Print the first 5 lines of a file:
 
 ```
-cpphead -5 notes.txt
-cpphead -n 5 notes.txt
-cpphead --lines=5 notes.txt
+head -5 notes.txt
+head -n 5 notes.txt
+head --lines=5 notes.txt
 ```
 
 Read from standard input:
 
 ```
-cat notes.txt | cpphead -n 20
-cpphead -n 20 -
+cat notes.txt | head -n 20
+head -n 20 -
 ```
 
 Print the first lines of multiple files, with headers:
 
 ```
-cpphead -n 3 a.txt b.txt c.txt
+head -n 3 a.txt b.txt c.txt
 ```
 
 Output:
@@ -72,13 +72,13 @@ line 3
 Suppress headers even with multiple files:
 
 ```
-cpphead -q -n 3 a.txt b.txt
+head -q -n 3 a.txt b.txt
 ```
 
 Force headers even with a single file:
 
 ```
-cpphead -v -n 3 a.txt
+head -v -n 3 a.txt
 ```
 
 ## Exit Codes
@@ -117,7 +117,7 @@ ctest --test-dir build --output-on-failure -C Release
 CppHead embeds its version and build timestamp at compile time. Run:
 
 ```
-cpphead --version
+head --version
 ```
 
 to confirm which build you're running.
